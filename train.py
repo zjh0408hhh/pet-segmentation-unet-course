@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from models.factory import build_model
 from pet_data import PetDataset
 import experiment as reporting
-from utils.runtime import acquire_lock, keep_awake
+from utils.runtime import acquire_lock
 
 PROJECT = Path(__file__).resolve().parent
 
@@ -37,7 +37,6 @@ def main():
     parser.add_argument('--checkpoint-dir', type=Path, default=PROJECT/'checkpoints')
     parser.add_argument('--check-only', action='store_true', help='Validate model, dataset and optional resume state without training.')
     args = parser.parse_args()
-    keep_awake()
     if args.epochs < 1:
         raise ValueError('--epochs must be positive')
     torch.set_num_threads(6)

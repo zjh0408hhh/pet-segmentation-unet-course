@@ -1,12 +1,7 @@
 # Added/adapted for this course project, 2026-11-01.
 # License: GPL-3.0; upstream attribution and modification details in SOURCES.md/CHANGES.md.
-"""OS-specific locking and optional Windows sleep inhibition."""
+"""Prevent concurrent training processes from overwriting experiment files."""
 import os
-
-def keep_awake():
-    if os.name == 'nt':
-        import ctypes
-        ctypes.windll.kernel32.SetThreadExecutionState(ctypes.c_uint(0x80000001))
 
 def acquire_lock(path):
     stream = path.open('a+b')

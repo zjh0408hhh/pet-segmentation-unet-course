@@ -39,8 +39,6 @@ def main():
     if (out / 'test_comparison.json').exists():
         print('Final evaluation already exists; refusing to overwrite it automatically.', flush=True)
         return
-    from utils.runtime import keep_awake
-    keep_awake()
     torch.set_num_threads(6)
     torch.set_num_interop_threads(1)
     summaries = {name: json.loads((args.experiments_dir/name/'summary.json').read_text(encoding='utf-8')) for name in ('baseline', 'improved')}
