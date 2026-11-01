@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+data/
+datasets/
+checkpoints/*
+!checkpoints/README.md
+!checkpoints/manifest.json
+runs/
+*.pth
+*.pt
+*.tar.gz
+*.zip
+.training.lock
+*.log

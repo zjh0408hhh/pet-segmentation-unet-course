@@ -1,0 +1,16 @@
+{
+  "baseline": {
+    "filename": "baseline_best.pth",
+    "sha256": "686162156681fa5215a1a81c5aeac316b97d0608b669db09cbad016c192f747a",
+    "model": "upstream_unet",
+    "best_epoch": 9,
+    "parameters": 31037698
+  },
+  "improved": {
+    "filename": "improved_best.pth",
+    "sha256": "9ec7fad4c8c67a72cede9547f419ee134af322b6efbd0e39c0362bf83ea9a596",
+    "model": "efficient_unet",
+    "best_epoch": 9,
+    "parameters": 6216898
+  }
+}

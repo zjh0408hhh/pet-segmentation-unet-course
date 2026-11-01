@@ -1,0 +1,56 @@
+{
+  "selection": "Extrema across all test images; these are deliberately selected extreme examples, not typical-performance estimates.",
+  "scope": "No model or threshold changes after observing test results.",
+  "counts": {
+    "images_improved": 2709,
+    "images_regressed": 953,
+    "images_tied": 7,
+    "median_per_image_iou_delta": 0.038664938149460704,
+    "mean_per_image_iou_baseline": 0.7143140394768156,
+    "mean_per_image_iou_improved": 0.7671838129584245
+  },
+  "cases": [
+    {
+      "kind": "最大改善",
+      "image": "Bombay_30",
+      "baseline_iou": 0.04135763670647392,
+      "improved_iou": 0.8043677109535787,
+      "delta": 0.7630100742471048,
+      "pixel_errors": {
+        "baseline": {
+          "tp": 329,
+          "fp": 0,
+          "fn": 7626,
+          "single_image_iou": 0.04135763670647392
+        },
+        "improved": {
+          "tp": 7035,
+          "fp": 791,
+          "fn": 920,
+          "single_image_iou": 0.8043677109535787
+        }
+      }
+    },
+    {
+      "kind": "最大退步",
+      "image": "Egyptian_Mau_33",
+      "baseline_iou": 0.6376496191512514,
+      "improved_iou": 0.09795918367346938,
+      "delta": -0.5396904354777821,
+      "pixel_errors": {
+        "baseline": {
+          "tp": 2344,
+          "fp": 1,
+          "fn": 1331,
+          "single_image_iou": 0.6376496191512514
+        },
+        "improved": {
+          "tp": 360,
+          "fp": 0,
+          "fn": 3315,
+          "single_image_iou": 0.09795918367346938
+        }
+      }
+    }
+  ]
+}
