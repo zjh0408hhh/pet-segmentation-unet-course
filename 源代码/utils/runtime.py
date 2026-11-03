@@ -1,5 +1,6 @@
 # Added/adapted for this course project, 2026-11-01.
-# License: GPL-3.0; upstream attribution and modification details in SOURCES.md/CHANGES.md.
+# License: GPL-3.0; see 部署文档/许可与来源.txt at the project root.
+# Project paths reorganized, 2026-11-03.
 """Prevent concurrent training processes from overwriting experiment files."""
 import os
 

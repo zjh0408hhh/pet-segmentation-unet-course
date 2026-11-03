@@ -1,5 +1,6 @@
 # Added/adapted for this course project, 2026-11-01.
-# License: GPL-3.0; upstream attribution and modification details in SOURCES.md/CHANGES.md.
+# License: GPL-3.0; see 部署文档/许可与来源.txt at the project root.
+# Project paths reorganized, 2026-11-03.
 """Locked best-validation checkpoints: shared final test and CPU timing protocol."""
 import argparse
 import csv
@@ -18,7 +19,9 @@ from torch.utils.data import DataLoader
 from models.factory import build_model
 from pet_data import PetDataset
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[1]
+SPLITS = ROOT / '部署文档' / '数据划分'
+RUN_NAMES = {'baseline': '原版模型', 'improved': '改进模型'}
 
 
 def metrics(tp, fp, fn):
@@ -29,23 +32,23 @@ def metrics(tp, fp, fn):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data-root', type=Path, required=True)
-    parser.add_argument('--checkpoint-dir', type=Path, default=ROOT/'checkpoints')
-    parser.add_argument('--experiments-dir', type=Path, default=ROOT/'runs')
-    parser.add_argument('--output-dir', type=Path, default=ROOT/'runs/comparison')
+    parser.add_argument('--checkpoint-dir', type=Path, default=ROOT/'结果/新实验/模型权重')
+    parser.add_argument('--experiments-dir', type=Path, default=ROOT/'结果/新实验')
+    parser.add_argument('--output-dir', type=Path, default=ROOT/'结果/新实验/测试对比')
     parser.add_argument('--check-only', action='store_true')
     args = parser.parse_args()
     out = args.output_dir
     out.mkdir(parents=True, exist_ok=True)
-    if (out / 'test_comparison.json').exists():
+    if (out / '测试指标.json').exists():
         print('Final evaluation already exists; refusing to overwrite it automatically.', flush=True)
         return
     torch.set_num_threads(6)
     torch.set_num_interop_threads(1)
-    summaries = {name: json.loads((args.experiments_dir/name/'summary.json').read_text(encoding='utf-8')) for name in ('baseline', 'improved')}
+    summaries = {name: json.loads((args.experiments_dir/RUN_NAMES[name]/'训练汇总.json').read_text(encoding='utf-8')) for name in ('baseline', 'improved')}
     configs = [{k: v for k, v in s['configuration'].items() if k != 'model'} for s in summaries.values()]
     assert configs[0] == configs[1], 'Experiment conditions differ'
     assert all(s['completed_epochs'] == 10 and s['checkpoint_reload_metrics_match'] for s in summaries.values())
-    dataset = PetDataset(args.data_root, ROOT/'splits/test.txt')
+    dataset = PetDataset(args.data_root, SPLITS/'test.txt')
     assert len(dataset) == 3669
     models, records = {}, {}
     for name, summary in summaries.items():
@@ -64,7 +67,7 @@ def main():
     # Identical real input, single-image latency, interleaved order and warmup.
     probe = dataset[0]['image'].unsqueeze(0).contiguous(memory_format=torch.channels_last)
     if args.check_only:
-        archived_rows = args.experiments_dir/'comparison/per_image_test.csv'
+        archived_rows = args.experiments_dir/'测试对比/逐图指标.csv'
         first_row = None
         if archived_rows.exists():
             with archived_rows.open(encoding='utf-8-sig', newline='') as stream:
@@ -97,7 +100,7 @@ def main():
     for record in records.values():
         record['inference_ms_median'] = statistics.median(record['inference_seconds'])*1000
         record['inference_ms_p90'] = float(np.percentile(record['inference_seconds'], 90))*1000
-    (out/'trained_model_timing.json').write_text(json.dumps(records, indent=2), encoding='utf-8')
+    (out/'预测计时.json').write_text(json.dumps(records, indent=2), encoding='utf-8')
 
     loader = DataLoader(dataset, batch_size=2, shuffle=False, num_workers=0, drop_last=False)
     counts = {name: [0, 0, 0] for name in models}
@@ -126,11 +129,11 @@ def main():
             if processed % 100 == 0 or processed == len(dataset):
                 progress = dict(status='evaluating_test', processed_images=processed, total_images=len(dataset),
                                 elapsed_seconds=time.perf_counter()-started)
-                (out/'progress.json').write_text(json.dumps(progress, indent=2), encoding='utf-8')
+                (out/'测试进度.json').write_text(json.dumps(progress, indent=2), encoding='utf-8')
                 print(json.dumps(progress), flush=True)
     for name in models:
         records[name]['test'] = dict(images=processed, **metrics(*counts[name]))
-    with (out/'per_image_test.csv').open('w', newline='', encoding='utf-8-sig') as file:
+    with (out/'逐图指标.csv').open('w', newline='', encoding='utf-8-sig') as file:
         writer = csv.DictWriter(file, fieldnames=['image', 'baseline_iou', 'improved_iou'])
         writer.writeheader()
         writer.writerows(case_rows)
@@ -138,7 +141,7 @@ def main():
                   input_size=128, cpu_threads=6, test_batch_size=2, inference_timing_batch_size=1,
                   inference_timing='FP32 channels_last; same preloaded real image; 5 warmups/model, 30 alternating-order repeats; excludes loading and output saving.',
                   metric='Foreground TP/FP/FN aggregated over all test pixels; border merged into foreground.',
-                  test_split_sha256=hashlib.sha256((ROOT/'splits/test.txt').read_bytes()).hexdigest(),
+                  test_split_sha256=hashlib.sha256((SPLITS/'test.txt').read_bytes()).hexdigest(),
                   runs=records, test_evaluation_seconds=time.perf_counter()-started,
                   limitation='One seed and one training run per architecture; not evidence of statistical significance.')
     result['differences'] = dict(
@@ -146,8 +149,8 @@ def main():
         test_dice_percentage_points=100*(records['improved']['test']['foreground_dice']-records['baseline']['test']['foreground_dice']),
         parameter_reduction=1-records['improved']['parameters']/records['baseline']['parameters'],
         inference_speedup=records['baseline']['inference_ms_median']/records['improved']['inference_ms_median'])
-    (out/'test_comparison.json').write_text(json.dumps(result, indent=2), encoding='utf-8')
-    (out/'progress.json').write_text(json.dumps(dict(status='complete', processed_images=processed), indent=2), encoding='utf-8')
+    (out/'测试指标.json').write_text(json.dumps(result, indent=2), encoding='utf-8')
+    (out/'测试进度.json').write_text(json.dumps(dict(status='complete', processed_images=processed), indent=2), encoding='utf-8')
 
     plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'DejaVu Sans']
     plt.rcParams['axes.unicode_minus'] = False
@@ -170,7 +173,7 @@ def main():
                     axes[row, column].set_title(['原图', '真实标注', '原版预测', '改进版预测'][column])
             axes[row, 0].set_ylabel(name + ('\n最大改善例' if row==4 else '\n最大退步例' if row==5 else '\n固定间隔样本'), fontsize=8)
     fig.suptitle('独立测试集对比：固定间隔样本 + 最大改善 / 最大退步案例', fontsize=13)
-    fig.savefig(out/'test_predictions.png', dpi=130)
+    fig.savefig(out/'预测对比.png', dpi=130)
     plt.close(fig)
     print('TEST_COMPARISON_COMPLETE', json.dumps(result['differences']), flush=True)
 

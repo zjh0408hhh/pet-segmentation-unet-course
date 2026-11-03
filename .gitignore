@@ -3,12 +3,9 @@ __pycache__/
 .venv/
 venv/
 .env
-data/
-datasets/
-checkpoints/*
-!checkpoints/README.md
-!checkpoints/manifest.json
-runs/
+数据集/
+数据压缩包/
+结果/新实验/
 *.pth
 *.pt
 *.tar.gz

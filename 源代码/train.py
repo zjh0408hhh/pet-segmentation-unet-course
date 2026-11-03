@@ -1,5 +1,6 @@
 # Added/adapted for this course project, 2026-11-01.
-# License: GPL-3.0; upstream attribution and modification details in SOURCES.md/CHANGES.md.
+# License: GPL-3.0; see 部署文档/许可与来源.txt at the project root.
+# Project paths reorganized, 2026-11-03.
 """Full-data CPU training shared by the baseline and modified architectures."""
 import argparse
 import gc
@@ -17,7 +18,9 @@ from pet_data import PetDataset
 import experiment as reporting
 from utils.runtime import acquire_lock
 
-PROJECT = Path(__file__).resolve().parent
+PROJECT = Path(__file__).resolve().parents[1]
+SPLITS = PROJECT / '部署文档' / '数据划分'
+RUN_NAMES = {'baseline': '原版模型', 'improved': '改进模型'}
 
 
 
@@ -34,7 +37,7 @@ def main():
     parser.add_argument('--epochs', type=int, default=10)
     parser.add_argument('--resume', action='store_true')
     parser.add_argument('--model', choices=['upstream_unet', 'efficient_unet'], default='upstream_unet')
-    parser.add_argument('--checkpoint-dir', type=Path, default=PROJECT/'checkpoints')
+    parser.add_argument('--checkpoint-dir', type=Path, default=PROJECT/'结果/新实验/模型权重')
     parser.add_argument('--check-only', action='store_true', help='Validate model, dataset and optional resume state without training.')
     args = parser.parse_args()
     if args.epochs < 1:
@@ -47,24 +50,24 @@ def main():
     run_name = 'baseline'
     if args.model == 'efficient_unet':
         run_name = 'improved'
-    out = PROJECT / 'runs' / run_name
+    out = PROJECT / '结果' / '新实验' / RUN_NAMES[run_name]
     out.mkdir(parents=True, exist_ok=True)
     run_lock = acquire_lock(out / '.training.lock')
     reporting.OUT = out
     best_path = args.checkpoint_dir / f'{run_name}_best.pth'
     last_path = args.checkpoint_dir / f'{run_name}_resume.pth'
-    best_path.parent.mkdir(exist_ok=True)
-    if (last_path.exists() or (out / 'summary.json').exists()) and not args.resume:
+    best_path.parent.mkdir(parents=True, exist_ok=True)
+    if (last_path.exists() or (out / '训练汇总.json').exists()) and not args.resume:
         raise RuntimeError('Results or checkpoints already exist. Use --resume to continue safely.')
 
-    train_names = (PROJECT / 'splits' / 'train.txt').read_text().splitlines()
-    val_names = (PROJECT / 'splits' / 'val.txt').read_text().splitlines()
+    train_names = (SPLITS / 'train.txt').read_text().splitlines()
+    val_names = (SPLITS / 'val.txt').read_text().splitlines()
     assert (len(train_names), len(val_names)) == (2944, 736)
     assert not set(train_names) & set(val_names)
-    assert not (set(train_names) | set(val_names)) & set((PROJECT / 'splits' / 'test.txt').read_text().splitlines())
+    assert not (set(train_names) | set(val_names)) & set((SPLITS / 'test.txt').read_text().splitlines())
     train_split, val_split = 'train.txt', 'val.txt'
-    train_set = PetDataset(args.data_root, PROJECT / 'splits' / train_split)
-    val_set = PetDataset(args.data_root, PROJECT / 'splits' / val_split)
+    train_set = PetDataset(args.data_root, SPLITS / train_split)
+    val_set = PetDataset(args.data_root, SPLITS / val_split)
     generator = torch.Generator().manual_seed(2026)
     train_loader = DataLoader(train_set, batch_size=2, shuffle=True, num_workers=0,
                               generator=generator, drop_last=False)
@@ -138,7 +141,7 @@ def main():
                 progress = dict(status='training', epoch=epoch, planned_epochs=args.epochs,
                                 processed_images=n, train_images=len(train_set), history=history,
                                 elapsed_seconds=elapsed, configuration=config)
-                (out / 'progress.json').write_text(json.dumps(progress, indent=2), encoding='utf-8')
+                (out / '训练进度.json').write_text(json.dumps(progress, indent=2), encoding='utf-8')
         training_seconds = time.perf_counter() - epoch_start
         validation_start = time.perf_counter()
         validation = reporting.evaluate(model, val_loader)
@@ -160,7 +163,7 @@ def main():
                          epoch=epoch, configuration=config, history=history,
                          initial_validation=initial, best_dice=best_dice, elapsed_seconds=elapsed,
                          torch_rng_state=torch.get_rng_state(), loader_rng_state=generator.get_state()), last_path)
-        (out / 'history.json').write_text(json.dumps(history, indent=2), encoding='utf-8')
+        (out / '训练记录.json').write_text(json.dumps(history, indent=2), encoding='utf-8')
         print('EPOCH_COMPLETE', json.dumps(row), flush=True)
 
     del optimizer, model
@@ -183,8 +186,8 @@ def main():
                    checkpoint_reload_metrics_match=True,
                    elapsed_seconds=time.perf_counter()-started+elapsed_before,
                    test_set_evaluated=False, parameters=sum(p.numel() for p in loaded.parameters()))
-    (out / 'summary.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
-    (out / 'progress.json').write_text(json.dumps(dict(status='complete', **summary), indent=2), encoding='utf-8')
+    (out / '训练汇总.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
+    (out / '训练进度.json').write_text(json.dumps(dict(status='complete', **summary), indent=2), encoding='utf-8')
     print('TRAINING_COMPLETE', json.dumps(summary['best_validation']), flush=True)
 
 

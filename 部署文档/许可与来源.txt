@@ -1,0 +1,16 @@
+代码来源与许可
+上游项目：https://github.com/milesial/Pytorch-UNet
+固定版本：21d7850f2af30a9695bbeea75f3136aa538cfc4a
+本派生代码按 GNU GPL v3 分发，完整条款见同目录 GPL-3.0许可证.txt。
+源代码/models/unet/ 下的三个文件及 源代码/upstream_utils/dice_score.py 保持上游内容不变。
+新增或改编内容包括宠物标注处理、固定数据划分、深度可分离卷积网络、训练及统一评估。
+代码改动日期为2026-11-01，目录与路径整理日期为2026-11-03。
+
+数据与结果图
+Oxford-IIIT Pet，Omkar M. Parkhi、Andrea Vedaldi、Andrew Zisserman、C. V. Jawahar，Cats and Dogs，CVPR 2012。
+官方来源：https://www.robots.ox.ac.uk/~vgg/data/pets/
+数据许可：CC BY-SA 4.0，https://creativecommons.org/licenses/by-sa/4.0/ 。原图版权归原权利人。
+本提交不打包原始数据。结果/测试对比/ 中的对比图只含真实标注和模型预测掩码。
+派生图将标注缩放至128×128，把宠物与边界合并为前景，并展示两组模型的二值预测。
+这些派生图按 CC BY-SA 4.0 提供，不暗示原作者认可本项目。
+训练曲线来自本次实验记录，数据及派生图许可独立于代码的 GPL 许可。

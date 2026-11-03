@@ -1,0 +1,31 @@
+宠物图像分割项目部署与运行
+
+环境：Python 3.12、PyTorch 2.5.1+cpu，已在 Windows 11 验证。
+以下命令在项目根目录的 PowerShell 中运行。
+
+一 安装依赖
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r .\部署文档\requirements-lock.txt
+requirements.txt 为直接依赖；requirements-lock.txt 为本次实验的完整版本清单。
+
+二 准备数据
+从 https://www.robots.ox.ac.uk/~vgg/data/pets/ 下载 images.tar.gz、annotations.tar.gz，放入自己新建的“数据压缩包”目录。
+.\.venv\Scripts\python.exe 源代码/prepare_data.py --archives 数据压缩包 --data-root 数据集
+数据划分清单保存在“部署文档/数据划分”中。
+
+三 训练
+.\.venv\Scripts\python.exe 源代码/train.py --model upstream_unet --data-root 数据集 --epochs 10
+.\.venv\Scripts\python.exe 源代码/train.py --model efficient_unet --data-root 数据集 --epochs 10
+训练记录保存在“结果/新实验/原版模型”和“结果/新实验/改进模型”，权重保存在“结果/新实验/模型权重”。
+续训时在相应命令末尾加 --resume；只检查配置和数据时加 --check-only。
+
+四 测试与绘图
+.\.venv\Scripts\python.exe 源代码/evaluate.py --data-root 数据集
+.\.venv\Scripts\python.exe 源代码/visualize_cases.py --data-root 数据集
+新测试结果写入“结果/新实验/测试对比”，不会覆盖已提交的实验记录。
+
+五 已完成实验
+“结果/原版模型”“结果/改进模型”“结果/测试对比”保存本次作业的真实记录。
+本提交不包含模型权重；没有权重时需先训练。
+如已取得 baseline_best.pth 和 improved_best.pth，可将它们放在同一目录，并指定：
+.\.venv\Scripts\python.exe 源代码/evaluate.py --data-root 数据集 --experiments-dir 结果 --checkpoint-dir 模型权重目录 --output-dir 结果/新实验/复核结果
