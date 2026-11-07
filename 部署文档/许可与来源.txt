@@ -1,7 +1,7 @@
 代码来源与许可
 上游项目：https://github.com/milesial/Pytorch-UNet
 固定版本：21d7850f2af30a9695bbeea75f3136aa538cfc4a
-本派生代码按 GNU GPL v3 分发，完整条款见同目录 GPL-3.0许可证.txt。
+本派生代码按 GNU GPL v3 分发，完整条款见仓库根目录 LICENSE。
 源代码/models/unet/ 下的三个文件及 源代码/upstream_utils/dice_score.py 保持上游内容不变。
 新增或改编内容包括宠物标注处理、固定数据划分、深度可分离卷积网络、训练及统一评估。
 代码改动日期为2026-11-01，目录与路径整理日期为2026-11-03。
