@@ -4,8 +4,6 @@
 """Course modification: factorize deep/decoder convolutions, keep shallow features.
 
 Derived from milesial/Pytorch-UNet, commit 21d7850f2af30a9695bbeea75f3136aa538cfc4a.
-GPL v3; see the project deployment license files. This is a conventional technique, not a new
-algorithm claim. Quality and actual CPU speed must be measured.
 """
 from torch import nn
 from .unet import UNet
